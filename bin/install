@@ -23,10 +23,24 @@ install() {
 
   mkdir -p "${bin_install_path}"
 
-  local download_url="https://helmfile-f2ce475813.s3.eu-west-1.amazonaws.com/helmfile-v${version}-${platform}-${arch}.tar.gz"
-  echo "Downloading helmfile from ${download_url}"
-  curl -sL "$download_url" -o helmfile.tar.gz
-  tar -C "$bin_install_path" -xf helmfile.tar.gz helmfile
+  local custom_download_url="https://helmfile-f2ce475813.s3.eu-west-1.amazonaws.com/helmfile-v${version}-${platform}-${arch}.tar.gz"
+  local upstream_download_url="https://github.com/helmfile/helmfile/releases/download/v${version}/helmfile_${version}_${platform}_${arch}.tar.gz"
+
+  # checks if the custom download URL is valid
+  if curl --fail --silent --head "${custom_download_url}"; then
+      echo "Downloading helmfile from ${custom_download_url}"
+      curl -sL "$custom_download_url" -o helmfile.tar.gz
+  # otherwise, try to download from the upstream URL
+  else
+      echo "Downloading helmfile from ${upstream_download_url}"
+      curl -sL "$upstream_download_url" -o helmfile.tar.gz
+  fi
+
+  if ! tar -C "$bin_install_path" -xf helmfile.tar.gz helmfile; then
+    echo "Failed to extract helmfile. Please ensure that the version ${version} exists."
+    exit 1
+  fi
+
   rm helmfile.tar.gz
 }
 
